@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'QuizGenius - AI-Powered Learning & Quiz Platform',
+  description: 'Transform your content into engaging videos and interactive quizzes with AI. Upload PDFs, text, or images and generate personalized learning experiences.',
+  generator: 'QuizGenius',
 }
 
 export default function RootLayout({
