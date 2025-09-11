@@ -1,0 +1,24 @@
+# PDF Text Extraction Requirements
+# High-accuracy PDF text extraction with multiple methods
+
+# Core PDF processing libraries
+PyMuPDF>=1.23.0        # Fast PDF processing (fitz)
+pdfplumber>=0.10.0     # Complex layouts and tables
+pypdf>=3.0.0           # Lightweight PDF reader
+
+# OCR capabilities for scanned PDFs
+pytesseract>=0.3.10    # Python wrapper for Tesseract OCR
+Pillow>=10.0.0         # Image processing for OCR
+
+# Web application dependencies
+Flask>=2.3.0           # Web framework
+Werkzeug>=2.3.0        # WSGI utilities
+
+# Optional: Enhanced text processing
+# textract>=1.6.5      # Alternative text extraction (uncomment if needed)
+# pdf2image>=1.16.3    # Convert PDF pages to images (for advanced OCR)
+
+# Development and testing (optional)
+# pytest>=7.0.0        # For testing
+# black>=23.0.0        # Code formatting
+# flake8>=6.0.0        # Linting

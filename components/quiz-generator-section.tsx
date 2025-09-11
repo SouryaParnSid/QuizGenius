@@ -32,8 +32,7 @@ export function QuizGeneratorSection() {
     setError(null)
     
     try {
-      // Read file content
-      const fileContent = await readFileContent(selectedFile)
+      let fileContent: string
       
       const options = {
         numberOfQuestions,
@@ -44,12 +43,23 @@ export function QuizGeneratorSection() {
       let quiz: QuizQuestion[]
       
       if (selectedFile.type === 'application/pdf') {
-        quiz = await generateQuizFromFile(fileContent, selectedFile.name, options)
+        // Use advanced PDF extraction API
+        console.log('Starting PDF extraction for:', selectedFile.name)
+        fileContent = await extractPdfText(selectedFile)
+        console.log('PDF extraction completed. Text length:', fileContent.length)
+        console.log('Text preview:', fileContent.substring(0, 200))
+        
+        if (fileContent.length < 50) {
+          throw new Error('PDF extraction returned insufficient text. Please try a different PDF file.')
+        }
+        
+        quiz = await generateQuizFromText(fileContent, options)
       } else if (selectedFile.type.startsWith('image/')) {
         // For image files, we need to use Gemini Vision to read the text
         quiz = await generateQuizFromImage(selectedFile, options)
       } else {
-        // For text files
+        // For text files, use the old method
+        fileContent = await readFileContent(selectedFile)
         quiz = await generateQuizFromText(fileContent, options)
       }
       
@@ -61,6 +71,86 @@ export function QuizGeneratorSection() {
       setError(error instanceof Error ? error.message : 'Failed to generate quiz')
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const extractPdfText = async (file: File): Promise<string> => {
+    try {
+      // Check if we're in production environment
+      const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+      
+      console.log('Starting PDF extraction...', {
+        fileName: file.name,
+        fileSize: file.size,
+        isProduction
+      })
+      
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('method', 'auto') // Use auto method for best results
+      // In production/Vercel, default to JavaScript extraction for reliability
+      formData.append('usePython', isProduction ? 'false' : 'true')
+      
+      const response = await fetch('/api/extract-pdf', {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (!response.ok) {
+        console.log('Python extraction failed, trying JavaScript fallback...')
+        
+        // Try JavaScript method as fallback
+        const fallbackFormData = new FormData()
+        fallbackFormData.append('file', file)
+        fallbackFormData.append('method', 'auto')
+        fallbackFormData.append('usePython', 'false')
+        
+        const fallbackResponse = await fetch('/api/extract-pdf', {
+          method: 'POST',
+          body: fallbackFormData
+        })
+        
+        if (!fallbackResponse.ok) {
+          const errorData = await fallbackResponse.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(errorData.error || 'Both Python and JavaScript PDF extraction methods failed')
+        }
+        
+        const fallbackData = await fallbackResponse.json()
+        
+        if (!fallbackData.success || !fallbackData.text || fallbackData.text.length < 10) {
+          throw new Error('PDF extraction returned insufficient text. The document might be scanned, encrypted, or contain only images.')
+        }
+        
+        console.log('JavaScript fallback extraction successful:', {
+          method: fallbackData.metadata?.method,
+          characters: fallbackData.text.length,
+          pages: fallbackData.metadata?.pages_with_text
+        })
+        
+        return fallbackData.text
+      }
+      
+      const data = await response.json()
+      
+      if (!data.success || !data.text) {
+        throw new Error('PDF extraction failed. The document might be scanned, encrypted, or contain only images.')
+      }
+      
+      if (data.text.length < 50) {
+        throw new Error('PDF extraction returned very little text. This might be a scanned document or contain mostly images. Please try a text-based PDF.')
+      }
+      
+      console.log('PDF extraction successful:', {
+        method: data.metadata?.method,
+        characters: data.text.length,
+        pages: data.metadata?.pages_with_text,
+        preview: data.text.substring(0, 100) + '...'
+      })
+      
+      return data.text
+    } catch (error) {
+      console.error('PDF extraction error:', error)
+      throw new Error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
