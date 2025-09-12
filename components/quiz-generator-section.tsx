@@ -236,6 +236,161 @@ export function QuizGeneratorSection() {
     return generatedQuiz.every(q => selectedAnswers[q.id] !== undefined)
   }
 
+  const exportResults = () => {
+    if (!generatedQuiz || !quizCompleted) return
+    
+    const score = calculateScore()
+    const timestamp = new Date().toLocaleString()
+    
+    const resultsData = {
+      quizTitle: quizTitle || 'AI Generated Quiz',
+      completedAt: timestamp,
+      score: {
+        correct: score.score,
+        total: score.total,
+        percentage: score.percentage
+      },
+      questions: generatedQuiz.map((question, index) => {
+        const userAnswer = selectedAnswers[question.id]
+        const isCorrect = userAnswer === question.correctAnswer
+        
+        return {
+          questionNumber: index + 1,
+          question: question.question,
+          userAnswer: question.options[userAnswer] || 'Not answered',
+          correctAnswer: question.options[question.correctAnswer],
+          isCorrect,
+          explanation: question.explanation || '',
+          contentReference: question.contentReference || ''
+        }
+      })
+    }
+    
+    // Export as JSON
+    const exportAsJson = () => {
+      const jsonString = JSON.stringify(resultsData, null, 2)
+      const blob = new Blob([jsonString], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `quiz-results-${Date.now()}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+    
+    // Export as CSV
+    const exportAsCSV = () => {
+      const csvHeaders = [
+        'Question Number',
+        'Question',
+        'Your Answer',
+        'Correct Answer',
+        'Result',
+        'Explanation'
+      ]
+      
+      const csvRows = [
+        csvHeaders.join(','),
+        ...resultsData.questions.map(q => [
+          q.questionNumber,
+          `"${q.question.replace(/"/g, '""')}"`,
+          `"${q.userAnswer.replace(/"/g, '""')}"`,
+          `"${q.correctAnswer.replace(/"/g, '""')}"`,
+          q.isCorrect ? 'Correct' : 'Incorrect',
+          `"${q.explanation.replace(/"/g, '""')}"`
+        ].join(','))
+      ]
+      
+      const csvString = csvRows.join('\n')
+      const blob = new Blob([csvString], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `quiz-results-${Date.now()}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+    
+    // Export as PDF (using HTML content)
+    const exportAsPDF = () => {
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${resultsData.quizTitle} - Results</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .score { background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; }
+            .question { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+            .correct { border-left: 4px solid #28a745; background: #f8fff9; }
+            .incorrect { border-left: 4px solid #dc3545; background: #fff8f8; }
+            .question-title { font-weight: bold; margin-bottom: 10px; }
+            .answer { margin: 5px 0; }
+            .explanation { margin-top: 10px; font-style: italic; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${resultsData.quizTitle}</h1>
+            <p>Completed on: ${resultsData.completedAt}</p>
+          </div>
+          
+          <div class="score">
+            <h2>Final Score: ${resultsData.score.percentage}%</h2>
+            <p>${resultsData.score.correct} out of ${resultsData.score.total} questions correct</p>
+          </div>
+          
+          <h3>Detailed Results:</h3>
+          ${resultsData.questions.map(q => `
+            <div class="question ${q.isCorrect ? 'correct' : 'incorrect'}">
+              <div class="question-title">Question ${q.questionNumber}: ${q.question}</div>
+              <div class="answer"><strong>Your Answer:</strong> ${q.userAnswer}</div>
+              ${!q.isCorrect ? `<div class="answer"><strong>Correct Answer:</strong> ${q.correctAnswer}</div>` : ''}
+              <div class="answer"><strong>Result:</strong> ${q.isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
+              ${q.explanation ? `<div class="explanation"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
+            </div>
+          `).join('')}
+        </body>
+        </html>
+      `
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `quiz-results-${Date.now()}.html`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+    
+    // Show export options
+    const exportFormat = prompt(
+      'Choose export format:\n1. JSON (for developers)\n2. CSV (for spreadsheets)\n3. HTML (for viewing/printing)\n\nEnter 1, 2, or 3:'
+    )
+    
+    switch(exportFormat) {
+      case '1':
+        exportAsJson()
+        break
+      case '2':
+        exportAsCSV()
+        break
+      case '3':
+        exportAsPDF()
+        break
+      default:
+        // Default to CSV if no valid option selected
+        exportAsCSV()
+    }
+  }
+
   return (
     <section id="quiz-creator" className="py-20 bg-slate-800">
       <div className="max-w-7xl mx-auto px-6">
@@ -537,7 +692,7 @@ export function QuizGeneratorSection() {
                           <RotateCcw className="h-4 w-4 mr-2" />
                           Retake Quiz
                         </Button>
-                        <Button variant="outline" className="flex-1">
+                        <Button onClick={exportResults} variant="outline" className="flex-1">
                           <Download className="h-4 w-4 mr-2" />
                           Export Results
                         </Button>
