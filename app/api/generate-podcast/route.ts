@@ -74,20 +74,29 @@ PODCAST REQUIREMENTS:
 - Title: ${options.title || 'Educational Podcast'}
 
 SCRIPT GUIDELINES:
-1. CREATE AN ENGAGING EDUCATIONAL PODCAST that teaches the key concepts from the content
-2. Use natural, conversational language that's easy to follow when spoken aloud
-3. Include engaging hooks, smooth transitions, and clear explanations
-4. Break down complex topics into digestible segments
-5. Add natural pauses, emphasis cues, and speaking directions
-6. Make it sound like a professional educational podcast host
+1. CREATE A FULL-LENGTH EDUCATIONAL PODCAST SCRIPT (minimum 1000-1500 words for proper ${options.duration} duration)
+2. EXPAND on the provided content - don't just summarize it, elaborate with examples, explanations, and detailed discussion
+3. Use natural, conversational language that's easy to follow when spoken aloud
+4. Include engaging hooks, smooth transitions, and clear explanations
+5. Break down complex topics into digestible segments with detailed explanations
+6. Add natural pauses, emphasis cues, and speaking directions
+7. Make it sound like a professional educational podcast host who takes time to explain concepts thoroughly
 
-STRUCTURE REQUIREMENTS:
-${options.includeIntro ? '- Start with an engaging intro that hooks the listener and previews what they\'ll learn' : ''}
-- Break content into clear, logical segments with smooth transitions
-- Use storytelling elements and examples to make concepts memorable
+DETAILED STRUCTURE REQUIREMENTS FOR ${options.duration} PODCAST:
+${options.includeIntro ? '- INTRO (2-3 minutes): Engaging hook, topic introduction, what listeners will learn, personal welcome' : ''}
+- MAIN CONTENT (${options.duration === 'auto' ? '8-12' : parseInt(options.duration.split(' ')[0]) - 2} minutes): 
+  * Deep dive into each major concept from the content
+  * Multiple examples and real-world applications  
+  * Detailed explanations that expand beyond the source material
+  * Conversational elaboration on key points
+  * Questions and answers to engage the listener
+- TRANSITIONS: Smooth bridges between topics with preview of what's coming next
 - Include natural speech patterns (pauses, emphasis, conversational phrases)
 - Add speaking cues like [PAUSE], [EMPHASIS], [SLOW], [EXCITED] where appropriate
-${options.includeIntro ? '- End with a summary and call-to-action outro' : ''}
+${options.includeIntro ? '- OUTRO (1-2 minutes): Comprehensive summary, key takeaways, call-to-action, thank you' : ''}
+
+MINIMUM WORD COUNT TARGET: ${options.duration === 'auto' ? '1200-1800' : Math.max(parseInt(options.duration.split(' ')[0]) * 180, 900)} words
+(This ensures proper speaking duration - average 150-180 words per minute)
 
 VOICE AND TONE FOR "${options.voiceType}" STYLE:
 ${options.voiceType === 'professional' ? '- Professional, authoritative, clear and polished delivery' :
@@ -117,13 +126,17 @@ CRITICAL: Return ONLY a valid JSON object with this exact structure:
   "topics": ["key", "topic", "list", "covered", "in", "podcast"]
 }
 
-IMPORTANT: 
-- Make the script sound natural when spoken aloud
+CRITICAL REQUIREMENTS: 
+- The script MUST be substantial enough to fill the requested duration (${options.duration})
+- DON'T just summarize - EXPAND, ELABORATE, and DISCUSS the content in detail
+- Include multiple examples, analogies, and real-world applications
+- Make the script sound natural when spoken aloud with conversational flow
 - Include [PAUSE] markers for natural breathing spots
 - Add [EMPHASIS] markers for important points
 - Use conversational transitions between ideas
 - Keep sentences at reasonable length for speech
 - Make it educational but engaging and listenable
+- If the source content is brief, elaborate extensively with related concepts and detailed explanations
 `
 
     const result = await model.generateContent(prompt)

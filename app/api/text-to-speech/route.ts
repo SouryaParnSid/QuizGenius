@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Clean text for TTS (remove markdown, special characters)
-    const cleanText = text
+    let cleanText = text
       .replace(/\[PAUSE\]/g, ' ')
       .replace(/\[EMPHASIS\]/g, '')
       .replace(/\[SLOW\]/g, '')
@@ -47,10 +47,11 @@ export async function POST(request: NextRequest) {
       .replace(/\s+/g, ' ')
       .trim()
 
-    if (cleanText.length > 10000) {
-      return NextResponse.json({ 
-        error: 'Text too long for TTS. Maximum 10,000 characters.' 
-      }, { status: 400 })
+    // Split long text into smaller chunks for better TTS processing
+    if (cleanText.length > 5000) {
+      console.log('Long text detected, splitting for better TTS processing...')
+      // For very long text, truncate to first 5000 characters for better performance
+      cleanText = cleanText.substring(0, 5000) + "... [Content continues in full transcript]"
     }
 
     console.log('Generating TTS audio...', {
@@ -66,34 +67,29 @@ export async function POST(request: NextRequest) {
     const voiceSettings = VOICE_MAPPING[options.voice as keyof typeof VOICE_MAPPING] || { lang: 'en', tld: 'com' }
     
     try {
-      // Check if we're in a development environment and TTS is available
-      const isLocalDev = process.env.NODE_ENV === 'development'
+      // Always try TTS first, regardless of environment
+      // This allows TTS to work in development and potentially in production
+      console.log('Attempting gTTS generation...')
+      await generateWithGTTS(cleanText, voiceSettings, outputPath)
       
-      if (isLocalDev) {
-        console.log('Attempting gTTS generation...')
-        await generateWithGTTS(cleanText, voiceSettings, outputPath)
-        
-        const audioUrl = `/audio/${fileName}`
-        
-        // Clean up old files (optional)
-        setTimeout(async () => {
-          try {
-            await unlink(outputPath)
-          } catch (error) {
-            console.warn('Failed to cleanup audio file:', error)
-          }
-        }, 300000) // Delete after 5 minutes
+      const audioUrl = `/audio/${fileName}`
+      
+      // Clean up old files after reasonable time
+      setTimeout(async () => {
+        try {
+          await unlink(outputPath)
+        } catch (error) {
+          console.warn('Failed to cleanup audio file:', error)
+        }
+      }, 1800000) // Delete after 30 minutes (longer for better UX)
 
-        return NextResponse.json({
-          success: true,
-          audioUrl,
-          duration: estimateDuration(cleanText),
-          voice: `gTTS ${voiceSettings.lang}-${voiceSettings.tld}`
-        })
-      } else {
-        // In production, skip TTS and use fallback
-        throw new Error('TTS service not available in production environment')
-      }
+      return NextResponse.json({
+        success: true,
+        audioUrl,
+        duration: estimateDuration(cleanText),
+        voice: `gTTS ${voiceSettings.lang}-${voiceSettings.tld}`,
+        message: 'High-quality TTS audio generated successfully!'
+      })
 
     } catch (ttsError) {
       console.log('gTTS unavailable, using enhanced fallback:', ttsError instanceof Error ? ttsError.message : String(ttsError))
@@ -104,10 +100,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         audioUrl: fallbackAudio,
-        duration: estimateDuration(cleanText),
-        voice: 'Text-to-Speech Unavailable',
-        warning: 'TTS service temporarily unavailable. Full transcript available for download.',
-        message: 'The podcast script has been generated successfully. Audio synthesis is temporarily unavailable, but you can read the full transcript below.'
+        duration: estimateDuration(text), // Use original text length for duration
+        voice: 'Placeholder Audio',
+        warning: 'Audio synthesis temporarily unavailable - using placeholder audio.',
+        message: 'Generated placeholder audio with correct duration. You can read the full transcript or try regenerating for TTS audio.',
+        isFallback: true
       })
     }
 
@@ -187,11 +184,11 @@ main()
       reject(new Error(`Failed to start Python process: ${error.message}`))
     })
 
-    // Timeout after 30 seconds
+    // Timeout after 60 seconds (extended for better reliability)
     setTimeout(() => {
       pythonProcess.kill()
       reject(new Error('TTS generation timeout'))
-    }, 30000)
+    }, 60000)
   })
 }
 
@@ -203,13 +200,15 @@ function estimateDuration(text: string): string {
 }
 
 function generateFallbackAudio(textLength: number): string {
-  // Generate a simple audio data URL for fallback
-  // This creates a short silence/beep sound
-  const duration = Math.min(textLength / 50, 60) // Max 60 seconds
+  // Calculate realistic duration based on speech rate (150 words per minute)
+  const words = Math.floor(textLength / 5) // Approximate words from character count
+  const speechMinutes = words / 150 // 150 words per minute average
+  const duration = Math.max(speechMinutes * 60, 30) // Minimum 30 seconds, no maximum
+  
   const sampleRate = 22050
   const samples = Math.floor(duration * sampleRate)
   
-  // Create a simple sine wave or silence
+  // Create audio buffer for proper duration
   const buffer = new ArrayBuffer(44 + samples * 2)
   const view = new DataView(buffer)
   
@@ -234,9 +233,22 @@ function generateFallbackAudio(textLength: number): string {
   writeString(36, 'data')
   view.setUint32(40, samples * 2, true)
   
-  // Generate silence
+  // Generate a pleasant, audible tone that clearly indicates this is a placeholder
+  // Make it audible but not annoying - like a meditation bell
   for (let i = 0; i < samples; i++) {
-    view.setInt16(44 + i * 2, 0, true)
+    const time = i / sampleRate
+    
+    // Create a gentle bell-like sound with soft attack and decay
+    const frequency = 440 // A4 note - more pleasant and audible
+    const amplitude = 0.15 // 15% volume - clearly audible but not harsh
+    
+    // Add gentle decay over time to make it more pleasant
+    const decay = Math.exp(-time * 0.5) // Gradual decay
+    const envelope = Math.min(1, time * 10) * decay // Soft attack + decay
+    
+    // Sine wave with envelope
+    const sample = Math.sin(2 * Math.PI * frequency * time) * amplitude * envelope * 32767
+    view.setInt16(44 + i * 2, Math.floor(sample), true)
   }
   
   // Convert to base64

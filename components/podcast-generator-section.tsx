@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -44,6 +44,95 @@ export function PodcastGeneratorSection() {
   const [generatedPodcast, setGeneratedPodcast] = useState<GeneratedPodcast | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [volume, setVolume] = useState(1)
+  
+  // Audio refs and controls
+  const audioRef = useRef<HTMLAudioElement>(null)
+  
+  // Audio control functions
+  const handlePlayPause = useCallback(async () => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    try {
+      if (isPlaying) {
+        await audio.pause()
+      } else {
+        await audio.play()
+      }
+    } catch (error) {
+      console.error('Error controlling audio playback:', error)
+      setError('Failed to play audio. Please check the audio file.')
+    }
+  }, [isPlaying])
+  
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const updateTime = () => setCurrentTime(audio.currentTime)
+    const updateDuration = () => setAudioDuration(audio.duration)
+    const handlePlay = () => setIsPlaying(true)
+    const handlePause = () => setIsPlaying(false)
+    const handleEnded = () => {
+      setIsPlaying(false)
+      setCurrentTime(0)
+    }
+
+    audio.addEventListener('timeupdate', updateTime)
+    audio.addEventListener('loadedmetadata', updateDuration)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('ended', handleEnded)
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime)
+      audio.removeEventListener('loadedmetadata', updateDuration)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('ended', handleEnded)
+    }
+  }, [generatedPodcast])
+
+  // Keyboard controls for audio player
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!generatedPodcast?.audioUrl) return
+      
+      // Only handle shortcuts when no input is focused
+      if (document.activeElement?.tagName === 'INPUT' || 
+          document.activeElement?.tagName === 'TEXTAREA') {
+        return
+      }
+
+      switch (event.key) {
+        case ' ': // Spacebar for play/pause
+          event.preventDefault()
+          handlePlayPause()
+          break
+        case 'ArrowLeft': // Left arrow for -10s
+          event.preventDefault()
+          const audio = audioRef.current
+          if (audio) {
+            audio.currentTime = Math.max(0, audio.currentTime - 10)
+          }
+          break
+        case 'ArrowRight': // Right arrow for +10s
+          event.preventDefault()
+          const audioRight = audioRef.current
+          if (audioRight) {
+            audioRight.currentTime = Math.min(audioRight.duration, audioRight.currentTime + 10)
+          }
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyPress)
+    return () => document.removeEventListener('keydown', handleKeyPress)
+  }, [generatedPodcast?.audioUrl, handlePlayPause])
   
   // Podcast settings
   const [podcastStyle, setPodcastStyle] = useState("conversational")
@@ -184,15 +273,15 @@ export function PodcastGeneratorSection() {
       if (!ttsResponse.ok) {
         console.warn('TTS generation failed, using fallback audio')
         audioUrl = generateFallbackAudio(podcastScript.script.length)
-        ttsWarning = 'TTS service temporarily unavailable. Transcript available for reading.'
+        ttsWarning = '🔊 Playing placeholder audio with correct duration. Full transcript available!'
       } else {
         const ttsData = await ttsResponse.json()
         audioUrl = ttsData.audioUrl
         ttsWarning = ttsData.warning || ttsData.message || ''
         
         // If we got a fallback response
-        if (ttsData.voice === 'Text-to-Speech Unavailable') {
-          ttsWarning = 'Audio synthesis temporarily unavailable. Full podcast script generated successfully!'
+        if (ttsData.voice === 'Text-to-Speech Unavailable' || ttsData.voice === 'Placeholder Audio' || ttsData.isFallback) {
+          ttsWarning = '🔊 Playing placeholder audio with correct duration. Full transcript available!'
         }
       }
 
@@ -225,12 +314,15 @@ export function PodcastGeneratorSection() {
   }
 
   const generateFallbackAudio = (textLength: number): string => {
-    // Generate a simple audio data URL for fallback when TTS fails
-    const duration = Math.min(textLength / 50, 60) // Max 60 seconds
+    // Calculate realistic duration based on speech rate (150 words per minute)
+    const words = Math.floor(textLength / 5) // Approximate words from character count
+    const speechMinutes = words / 150 // 150 words per minute average
+    const duration = Math.max(speechMinutes * 60, 30) // Minimum 30 seconds, no maximum
+    
     const sampleRate = 22050
     const samples = Math.floor(duration * sampleRate)
     
-    // Create a simple silence audio file
+    // Create audio buffer for proper duration
     const buffer = new ArrayBuffer(44 + samples * 2)
     const view = new DataView(buffer)
     
@@ -255,9 +347,22 @@ export function PodcastGeneratorSection() {
     writeString(36, 'data')
     view.setUint32(40, samples * 2, true)
     
-    // Generate silence
+    // Generate a pleasant, audible tone that clearly indicates this is a placeholder
+    // Make it audible but not annoying - like a meditation bell
     for (let i = 0; i < samples; i++) {
-      view.setInt16(44 + i * 2, 0, true)
+      const time = i / sampleRate
+      
+      // Create a gentle bell-like sound with soft attack and decay
+      const frequency = 440 // A4 note - more pleasant and audible
+      const amplitude = 0.12 // 12% volume - clearly audible but not harsh
+      
+      // Add gentle decay over time to make it more pleasant
+      const decay = Math.exp(-time * 0.5) // Gradual decay
+      const envelope = Math.min(1, time * 10) * decay // Soft attack + decay
+      
+      // Sine wave with envelope
+      const sample = Math.sin(2 * Math.PI * frequency * time) * amplitude * envelope * 32767
+      view.setInt16(44 + i * 2, Math.floor(sample), true)
     }
     
     // Convert to base64
@@ -294,6 +399,11 @@ export function PodcastGeneratorSection() {
       const podcast = await generatePodcastContent(fileContent)
       setGeneratedPodcast(podcast)
       
+      // Reset audio state for new podcast
+      setIsPlaying(false)
+      setCurrentTime(0)
+      setAudioDuration(0)
+      
     } catch (error) {
       console.error('Podcast generation error:', error)
       setError(error instanceof Error ? error.message : 'Failed to generate podcast')
@@ -307,8 +417,94 @@ export function PodcastGeneratorSection() {
     setError(null)
   }
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying)
+  const handleSeek = (event: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current
+    if (!audio || !audioDuration) return
+
+    const rect = event.currentTarget.getBoundingClientRect()
+    const clickX = event.clientX - rect.left
+    const width = rect.width
+    const percentage = clickX / width
+    const newTime = percentage * audioDuration
+
+    audio.currentTime = newTime
+    setCurrentTime(newTime)
+  }
+
+  const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(event.target.value)
+    setVolume(newVolume)
+    
+    const audio = audioRef.current
+    if (audio) {
+      audio.volume = newVolume
+    }
+  }
+
+  const formatTime = (time: number): string => {
+    if (isNaN(time)) return '0:00'
+    
+    const minutes = Math.floor(time / 60)
+    const seconds = Math.floor(time % 60)
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  const handleDownload = () => {
+    if (!generatedPodcast?.audioUrl) return
+
+    const link = document.createElement('a')
+    link.href = generatedPodcast.audioUrl
+    link.download = `${generatedPodcast.metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp3`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleViewScript = () => {
+    if (!generatedPodcast?.script) return
+
+    const scriptWindow = window.open('', '_blank')
+    if (scriptWindow) {
+      scriptWindow.document.write(`
+        <html>
+          <head>
+            <title>${generatedPodcast.metadata.title} - Podcast Script</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                max-width: 800px; 
+                margin: 0 auto; 
+                padding: 20px; 
+                line-height: 1.6; 
+              }
+              h1 { color: #333; }
+              .metadata { 
+                background: #f5f5f5; 
+                padding: 15px; 
+                border-radius: 5px; 
+                margin-bottom: 20px; 
+              }
+              .script { 
+                white-space: pre-wrap; 
+                background: #fafafa; 
+                padding: 20px; 
+                border-radius: 5px; 
+              }
+            </style>
+          </head>
+          <body>
+            <h1>${generatedPodcast.metadata.title}</h1>
+            <div class="metadata">
+              <p><strong>Description:</strong> ${generatedPodcast.metadata.description}</p>
+              <p><strong>Duration:</strong> ${generatedPodcast.metadata.duration}</p>
+              <p><strong>Host:</strong> ${generatedPodcast.metadata.host}</p>
+            </div>
+            <div class="script">${generatedPodcast.script}</div>
+          </body>
+        </html>
+      `)
+      scriptWindow.document.close()
+    }
   }
 
   return (
@@ -513,40 +709,83 @@ export function PodcastGeneratorSection() {
                   <div className="bg-slate-700 rounded-lg p-4 space-y-2">
                     <h3 className="font-semibold text-white">{generatedPodcast.metadata.title}</h3>
                     <p className="text-sm text-slate-300">{generatedPodcast.metadata.description}</p>
+                    {generatedPodcast.metadata.description.includes('🔊') && (
+                      <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-3 mt-2">
+                        <p className="text-blue-200 text-sm">
+                          <span className="text-blue-400">ℹ️ Audio Note:</span> This is placeholder audio with the correct duration. 
+                          The full script is available in the transcript. Real TTS audio generation is temporarily unavailable.
+                        </p>
+                      </div>
+                    )}
                     <div className="flex items-center gap-4 text-xs text-slate-400">
                       <span>Duration: {generatedPodcast.metadata.duration}</span>
                       <span>Host: {generatedPodcast.metadata.host}</span>
-                      <span>Generated with: Gemini AI + Edge TTS</span>
+                      <span>Generated with: Gemini AI + gTTS</span>
                     </div>
                   </div>
 
                   {/* Audio Player */}
                   <div className="bg-slate-700 rounded-lg p-6">
+                    {/* Hidden Audio Element */}
+                    <audio
+                      ref={audioRef}
+                      src={generatedPodcast.audioUrl}
+                      preload="metadata"
+                      className="hidden"
+                    />
+                    
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-4">
                         <Button
                           onClick={handlePlayPause}
                           size="lg"
                           className="rounded-full bg-purple-500 hover:bg-purple-600 p-3"
+                          disabled={!generatedPodcast.audioUrl}
                         >
                           {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
                         </Button>
                         <div>
-                          <p className="font-medium text-white">Now Playing</p>
+                          <p className="font-medium text-white">
+                            {isPlaying ? 'Now Playing' : 'Ready to Play'}
+                          </p>
                           <p className="text-sm text-slate-300">{generatedPodcast.metadata.title}</p>
                         </div>
                       </div>
-                      <Volume2 className="h-5 w-5 text-slate-400" />
+                      <div className="flex items-center gap-2">
+                        <Volume2 className="h-4 w-4 text-slate-400" />
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={volume}
+                          onChange={handleVolumeChange}
+                          className="w-20 h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
                     </div>
                     
                     {/* Progress Bar */}
-                    <div className="w-full bg-slate-600 rounded-full h-2 mb-4">
-                      <div className="bg-purple-500 h-2 rounded-full w-1/3"></div>
+                    <div 
+                      className="w-full bg-slate-600 rounded-full h-2 mb-4 cursor-pointer"
+                      onClick={handleSeek}
+                    >
+                      <div 
+                        className="bg-purple-500 h-2 rounded-full transition-all duration-100 ease-out"
+                        style={{ 
+                          width: audioDuration > 0 ? `${(currentTime / audioDuration) * 100}%` : '0%' 
+                        }}
+                      ></div>
                     </div>
                     
                     <div className="flex justify-between text-xs text-slate-400">
-                      <span>0:00</span>
-                      <span>{generatedPodcast.metadata.duration}</span>
+                      <span>{formatTime(currentTime)}</span>
+                      <span>{formatTime(audioDuration)}</span>
+                    </div>
+                    
+                    {/* Keyboard controls hint */}
+                    <div className="mt-2 text-xs text-slate-500 text-center">
+                      Keyboard: Space = Play/Pause, ← = -10s, → = +10s
                     </div>
                   </div>
 
@@ -567,11 +806,19 @@ export function PodcastGeneratorSection() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+                    <Button 
+                      onClick={handleDownload}
+                      disabled={!generatedPodcast.audioUrl}
+                      className="flex-1 bg-purple-600 hover:bg-purple-700"
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Download MP3
                     </Button>
-                    <Button variant="outline" className="flex-1">
+                    <Button 
+                      onClick={handleViewScript}
+                      variant="outline" 
+                      className="flex-1"
+                    >
                       <FileText className="h-4 w-4 mr-2" />
                       View Script
                     </Button>
