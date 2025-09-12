@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Play, BookOpen, Brain, Sparkles } from "lucide-react"
+import { Mic, BookOpen, Brain, Sparkles } from "lucide-react"
 import { Header } from "./header"
 
 export function QuizGeniusHero() {
@@ -41,18 +41,18 @@ export function QuizGeniusHero() {
 
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Upload PDFs, text, or images and let our AI create engaging educational videos 
+            Upload PDFs, text, or images and let our AI create engaging educational podcasts 
             and personalized quizzes that boost learning retention by up to 85%
           </p>
 
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <Button 
-              onClick={() => scrollToSection('video-generator')}
+              onClick={() => scrollToSection('podcast-generator')}
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-8 py-4 text-lg rounded-full shadow-lg transform transition-all hover:scale-105"
             >
-              <Play className="h-5 w-5 mr-2" />
-              Create Learning Video
+              <Mic className="h-5 w-5 mr-2" />
+              Create Learning Podcast
             </Button>
             <Button 
               onClick={() => scrollToSection('quiz-creator')}
@@ -68,13 +68,13 @@ export function QuizGeniusHero() {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-400/30">
-                <Play className="h-8 w-8 text-cyan-400" />
+                <Mic className="h-8 w-8 text-cyan-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">
-                AI Video Generation
+                AI Podcast Generation
               </h3>
               <p className="text-slate-300">
-                Transform any text or PDF into engaging educational videos with narration and visuals
+                Transform any text or PDF into engaging educational podcasts with AI narration and natural conversation flow
               </p>
             </div>
             

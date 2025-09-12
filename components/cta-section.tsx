@@ -107,11 +107,11 @@ export function CTASection() {
             Learning made effortless
           </h2>
           <p className="text-slate-300 text-sm md:text-base font-medium leading-[18.20px] md:leading-relaxed break-words max-w-2xl">
-            Transform your content into engaging videos and interactive quizzes with QuizGenius's
+            Transform your content into engaging podcasts and interactive quizzes with QuizGenius's
             powerful AI tools. Start learning smarter today.
           </p>
         </div>
-        <Link href="#video-generator">
+        <Link href="#podcast-generator">
           <Button
             className="px-[30px] py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white text-base font-medium leading-6 rounded-[99px] shadow-[0px_0px_0px_4px_rgba(6,182,212,0.2)] transition-all duration-200 transform hover:scale-105"
             size="lg"

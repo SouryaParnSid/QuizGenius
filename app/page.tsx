@@ -1,5 +1,5 @@
 import { QuizGeniusHero } from "@/components/quizgenius-hero"
-import { VideoGeneratorSection } from "@/components/video-generator-section"
+import { PodcastGeneratorSection } from "@/components/podcast-generator-section"
 import { QuizGeneratorSection } from "@/components/quiz-generator-section"
 import { FeaturesSection } from "@/components/features-section"
 import { CTASection } from "@/components/cta-section"
@@ -13,9 +13,9 @@ export default function QuizGeniusPage() {
         {/* Hero Section */}
         <QuizGeniusHero />
         
-        {/* Video Generator Section */}
+        {/* Podcast Generator Section */}
         <AnimatedSection delay={0.1}>
-          <VideoGeneratorSection />
+          <PodcastGeneratorSection />
         </AnimatedSection>
         
         {/* Quiz Generator Section */}

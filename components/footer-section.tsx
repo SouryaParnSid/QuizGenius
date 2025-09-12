@@ -30,8 +30,8 @@ export function FooterSection() {
         <div className="flex flex-col justify-start items-start gap-3">
           <h3 className="text-slate-400 text-sm font-medium leading-5">Product</h3>
           <div className="flex flex-col justify-end items-start gap-2">
-            <a href="#video-generator" className="text-slate-300 text-sm font-normal leading-5 hover:text-cyan-400 hover:underline transition-colors">
-              Video Generator
+            <a href="#podcast-generator" className="text-slate-300 text-sm font-normal leading-5 hover:text-cyan-400 hover:underline transition-colors">
+              Podcast Generator
             </a>
             <a href="#quiz-creator" className="text-slate-300 text-sm font-normal leading-5 hover:text-cyan-400 hover:underline transition-colors">
               Quiz Creator

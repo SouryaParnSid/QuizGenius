@@ -4,7 +4,7 @@
 
 ![QuizGenius Logo](https://img.shields.io/badge/🧠-QuizGenius-6366f1?style=for-the-badge&labelColor=1e293b)
 
-**Transform your content into engaging videos and interactive quizzes with AI magic! 🪄**
+**Transform your content into engaging podcasts and interactive quizzes with AI magic! 🪄**
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.2.4-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.1.1-61dafb?style=flat-square&logo=react)](https://reactjs.org/)
@@ -21,12 +21,12 @@
 ## 🌟 What is QuizGenius?
 
 QuizGenius is a cutting-edge AI-powered platform that revolutionizes learning by transforming your documents and images into:
-- 🎬 **Interactive Learning Videos** from text and PDFs
-- 📝 **Smart Quizzes** from PDFs and images
+- 🎙️ **Interactive Learning Podcasts** from text and PDFs with AI narration
+- 📝 **Smart Quizzes** from PDFs and images with OCR
 - 🎯 **Personalized Learning Experiences** with real-time feedback
 
 ### ✨ The Magic Behind It
-Powered by **Google's Gemini 2.0 Flash** AI model, QuizGenius understands your content deeply and creates meaningful, context-aware questions that actually test comprehension - not just metadata!
+Powered by **Google's Gemini 2.0 Flash** AI model and advanced PDF processing with Python, QuizGenius understands your content deeply and creates meaningful podcasts with natural narration and context-aware quiz questions that actually test comprehension - not just metadata!
 
 ---
 
@@ -35,10 +35,10 @@ Powered by **Google's Gemini 2.0 Flash** AI model, QuizGenius understands your c
 <table>
 <tr>
 <td align="center">
-<img src="https://img.shields.io/badge/🎬-Video%20Generator-purple?style=for-the-badge&logoColor=white" alt="Video Generator"/>
+<img src="https://img.shields.io/badge/🎙️-Podcast%20Generator-purple?style=for-the-badge&logoColor=white" alt="Podcast Generator"/>
 <br><br>
-<b>AI Video Generation</b><br>
-Transform text & PDFs into engaging learning videos
+<b>AI Podcast Generation</b><br>
+Transform text & PDFs into engaging learning podcasts with natural AI narration
 </td>
 <td align="center">
 <img src="https://img.shields.io/badge/📝-Quiz%20Creator-blue?style=for-the-badge&logoColor=white" alt="Quiz Creator"/>
@@ -55,10 +55,10 @@ Get detailed feedback & explanations
 </tr>
 <tr>
 <td align="center">
-<img src="https://img.shields.io/badge/🔍-Content%20Analysis-orange?style=for-the-badge&logoColor=white" alt="Content Analysis"/>
+<img src="https://img.shields.io/badge/🔍-PDF%20Processing-orange?style=for-the-badge&logoColor=white" alt="PDF Processing"/>
 <br><br>
-<b>Deep Content Analysis</b><br>
-AI focuses on actual content, not metadata
+<b>Advanced PDF Processing</b><br>
+Multi-method Python-based extraction with OCR support for scanned documents
 </td>
 <td align="center">
 <img src="https://img.shields.io/badge/🌙-Dark%20Theme-indigo?style=for-the-badge&logoColor=white" alt="Dark Theme"/>
@@ -81,6 +81,7 @@ Perfect on any device
 
 ### Prerequisites
 - 📦 Node.js 18+ 
+- 🐍 Python 3.x (for advanced PDF processing)
 - 🔑 Google Gemini API Key ([Get yours here](https://ai.google.dev/))
 
 ### 1️⃣ Clone & Install
@@ -99,7 +100,16 @@ cp .env.example .env.local
 NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-### 3️⃣ Launch! 🚀
+### 3️⃣ Setup Python Dependencies 
+```bash
+# Install Python dependencies for advanced PDF processing
+pip install -r scripts/requirements.txt
+
+# Test the setup
+python scripts/test_setup.py
+```
+
+### 4️⃣ Launch! 🚀
 ```bash
 npm run dev
 ```
@@ -125,19 +135,21 @@ Open [http://localhost:3000](http://localhost:3000) and start creating! ✨
 
 ```mermaid
 graph LR
-    A[📄 Upload Content] --> B[🤖 AI Analysis]
-    B --> C[🎬 Video Generation]
-    B --> D[📝 Quiz Creation]
-    D --> E[🎯 Take Quiz]
-    E --> F[📊 Smart Scoring]
-    F --> G[💡 Learn & Improve]
+    A[📄 Upload PDF] --> B[🐍 Python PDF Processing]
+    B --> C[🤖 AI Analysis]
+    C --> D[🎙️ Podcast Generation]
+    C --> E[📝 Quiz Creation]
+    E --> F[🎯 Take Quiz]
+    F --> G[📊 Smart Scoring]
+    G --> H[💡 Learn & Improve]
 ```
 
 ### The QuizGenius Process:
-1. **🔍 Smart Content Analysis**: AI reads and understands your documents
-2. **🧠 Intelligent Processing**: Extracts meaningful information, ignores metadata
-3. **🎯 Context-Aware Generation**: Creates relevant questions about actual content
-4. **💬 Detailed Feedback**: Provides explanations and references to source material
+1. **📄 Advanced PDF Processing**: Multi-method Python extraction (PyMuPDF, pdfplumber, OCR)
+2. **🤖 AI Content Analysis**: Gemini AI reads and understands your documents deeply
+3. **🎙️ Podcast Generation**: Creates engaging audio content with natural AI narration
+4. **📝 Quiz Creation**: Generates context-aware questions about actual content
+5. **💬 Detailed Feedback**: Provides explanations and references to source material
 
 ---
 
@@ -147,12 +159,19 @@ graph LR
 quizgenius/
 ├── 🏠 app/                    # Next.js app directory
 │   ├── 📄 layout.tsx         # Root layout with metadata
-│   └── 🏡 page.tsx           # Main page composition
+│   ├── 🏡 page.tsx           # Main page composition
+│   └── 🔗 api/               # API routes for backend
+│       ├── 📄 extract-pdf/   # PDF processing endpoint
+│       ├── 🎙️ generate-podcast/ # Podcast generation
+│       └── 🔊 text-to-speech/ # Audio synthesis
 ├── 🧩 components/            # Reusable React components
 │   ├── 🎭 ui/                # Base UI components
-│   ├── 🎬 video-generator-section.tsx
+│   ├── 🎙️ podcast-generator-section.tsx
 │   ├── 📝 quiz-generator-section.tsx
 │   └── 🎨 *-section.tsx      # Feature sections
+├── 🐍 scripts/               # Python processing scripts
+│   ├── 📄 pdf_text_extractor.py # Multi-method PDF extraction
+│   └── 🔧 requirements.txt   # Python dependencies
 ├── 📚 lib/                   # Utility libraries
 │   └── 🤖 gemini.ts          # AI integration
 ├── 🔧 .env.local             # Environment variables (private)
@@ -190,11 +209,12 @@ const quiz = await generateQuiz(file, {
 // Take the quiz and get instant feedback! 🎯
 ```
 
-### 🎬 Generating Videos
+### 🎙️ Generating Podcasts
 ```typescript
 // From text or PDF content
-const video = await generateLearningVideo(content, {
-  style: 'educational',
+const podcast = await generateLearningPodcast(content, {
+  style: 'conversational',
+  voice: 'professional',
   duration: 'auto'
 });
 ```
@@ -211,8 +231,8 @@ const video = await generateLearningVideo(content, {
 ### 📝 Quiz Interface
 *Coming Soon: Interactive quiz generation and taking experience*
 
-### 🎬 Video Generation
-*Coming Soon: AI-powered video creation from your content*
+### 🎙️ Podcast Generation
+*Coming Soon: Screenshots of AI-powered podcast creation with natural narration*
 
 </div>
 
@@ -245,7 +265,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- 🤖 **Google Gemini AI** - For powering our intelligent quiz generation
+- 🤖 **Google Gemini AI** - For powering our intelligent content generation
+- 🐍 **Python PDF Libraries** - PyMuPDF, pdfplumber, Tesseract OCR for robust document processing
+- 🎙️ **Google Text-to-Speech** - For natural audio synthesis
 - ⚛️ **React & Next.js** - For the amazing development experience
 - 🎨 **Tailwind CSS** - For making styling a breeze
 - 🔧 **Radix UI** - For accessible component primitives
@@ -272,7 +294,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **If QuizGenius helped you learn better, give us a star! ⭐**
 
-[⭐ **STAR THIS REPO** ⭐](https://github.com/yourusername/quizgenius)
+<!-- [⭐ **STAR THIS REPO** ⭐](https://github.com/yourusername/quizgenius) -->
 
 ---
 

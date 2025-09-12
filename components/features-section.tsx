@@ -10,7 +10,7 @@ import {
   Users, 
   Clock, 
   CheckCircle,
-  Play,
+  Mic,
   Brain,
   FileText,
   Image as ImageIcon
@@ -21,13 +21,13 @@ export function FeaturesSection() {
     {
       icon: <Zap className="h-8 w-8" />,
       title: "Lightning Fast AI",
-      description: "Generate videos and quizzes in minutes, not hours. Our advanced AI processes content at incredible speed.",
+      description: "Generate podcasts and quizzes in minutes, not hours. Our advanced AI processes content at incredible speed.",
       color: "text-yellow-600"
     },
     {
-      icon: <Play className="h-8 w-8" />,
-      title: "Interactive Videos",
-      description: "Create engaging educational videos with AI narration, visual aids, and dynamic presentations.",
+      icon: <Mic className="h-8 w-8" />,
+      title: "Interactive Podcasts",
+      description: "Create engaging educational podcasts with AI narration, natural conversation flow, and dynamic audio presentations.",
       color: "text-blue-600"
     },
     {
@@ -45,7 +45,7 @@ export function FeaturesSection() {
     {
       icon: <Palette className="h-8 w-8" />,
       title: "Customizable Content",
-      description: "Tailor video styles, quiz difficulty, and presentation formats to match your needs.",
+      description: "Tailor podcast styles, quiz difficulty, and audio presentation formats to match your needs.",
       color: "text-pink-600"
     },
     {
@@ -57,7 +57,7 @@ export function FeaturesSection() {
     {
       icon: <Users className="h-8 w-8" />,
       title: "Collaborative Learning",
-      description: "Share quizzes and videos with teams, track group progress, and enable collaborative learning.",
+      description: "Share quizzes and podcasts with teams, track group progress, and enable collaborative learning.",
       color: "text-cyan-600"
     },
     {
@@ -75,7 +75,7 @@ export function FeaturesSection() {
   ]
 
   const stats = [
-    { number: "50M+", label: "Videos Generated" },
+    { number: "50M+", label: "Podcasts Generated" },
     { number: "200K+", label: "Active Users" },
     { number: "85%", label: "Learning Improvement" },
     { number: "24/7", label: "AI Availability" }
@@ -166,7 +166,7 @@ export function FeaturesSection() {
               </div>
               <h4 className="text-xl font-semibold mb-4 text-white">3. Get Results</h4>
               <p className="text-slate-300">
-                Receive polished videos and interactive quizzes ready for immediate use in your learning environment.
+                Receive polished podcasts and interactive quizzes ready for immediate use in your learning environment.
               </p>
             </div>
           </div>
