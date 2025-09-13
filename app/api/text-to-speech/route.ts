@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { spawn } from 'child_process'
 import { writeFile, unlink, mkdir } from 'fs/promises'
 import { join } from 'path'
-import { existsSync } from 'fs'
+import { existsSync, statSync } from 'fs'
 
 interface TTSOptions {
   voice: string
@@ -69,10 +69,25 @@ export async function POST(request: NextRequest) {
     try {
       // Always try TTS first, regardless of environment
       // This allows TTS to work in development and potentially in production
-      console.log('Attempting gTTS generation...')
+      console.log('Attempting gTTS generation...', {
+        textLength: cleanText.length,
+        voice: options.voice,
+        voiceSettings,
+        outputPath
+      })
+      
       await generateWithGTTS(cleanText, voiceSettings, outputPath)
       
+      // Verify file was actually created
+      if (!existsSync(outputPath)) {
+        throw new Error('Audio file was not created')
+      }
+      
       const audioUrl = `/audio/${fileName}`
+      console.log('gTTS generation successful:', {
+        audioUrl,
+        fileSize: existsSync(outputPath) ? statSync(outputPath).size : 0
+      })
       
       // Clean up old files after reasonable time
       setTimeout(async () => {
@@ -92,7 +107,13 @@ export async function POST(request: NextRequest) {
       })
 
     } catch (ttsError) {
-      console.log('gTTS unavailable, using enhanced fallback:', ttsError instanceof Error ? ttsError.message : String(ttsError))
+      console.error('gTTS generation failed:', {
+        error: ttsError instanceof Error ? ttsError.message : String(ttsError),
+        stack: ttsError instanceof Error ? ttsError.stack : undefined,
+        textLength: cleanText.length,
+        voiceSettings,
+        outputPath
+      })
       
       // Enhanced fallback: Return a professional fallback response
       const fallbackAudio = generateFallbackAudio(cleanText.length)
@@ -122,73 +143,131 @@ async function generateWithGTTS(text: string, voiceSettings: { lang: string; tld
     // Use gTTS Python package
     const pythonCommand: string = process.platform === 'win32' ? 'python' : 'python3'
     
-    const args = [
-      '-c',
-      `
-from gtts import gTTS
+    // Better text escaping for Python strings
+    const escapedText = text
+      .replace(/\\/g, '\\\\')  // Escape backslashes first
+      .replace(/"/g, '\\"')    // Escape quotes
+      .replace(/\n/g, '\\n')   // Escape newlines
+      .replace(/\r/g, '\\r')   // Escape carriage returns
+      .replace(/\t/g, '\\t')   // Escape tabs
+    
+    const pythonScript = `
 import sys
 import os
 
+try:
+    from gtts import gTTS
+except ImportError as e:
+    print(f"TTS_ERROR: gTTS not installed - {e}")
+    sys.exit(1)
+
 def main():
     try:
-        text = """${text.replace(/"/g, '\\"')}"""
-        output = "${outputPath.replace(/\\/g, '\\\\')}"
+        # Input parameters
+        text = """${escapedText}"""
+        output_path = r"${outputPath}"
         lang = "${voiceSettings.lang}"
         tld = "${voiceSettings.tld}"
         
-        # Create gTTS object
-        tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
+        # Validate inputs
+        if not text or len(text.strip()) == 0:
+            print("TTS_ERROR: Empty text provided")
+            sys.exit(1)
         
-        # Save to file
-        tts.save(output)
+        # Ensure output directory exists
+        output_dir = os.path.dirname(output_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
         
-        # Verify file was created
-        if os.path.exists(output) and os.path.getsize(output) > 0:
-            print("TTS_SUCCESS")
-        else:
-            print("TTS_ERROR: File not created or empty")
+        print(f"Generating gTTS for {len(text)} characters...")
+        print(f"Language: {lang}, TLD: {tld}")
+        print(f"Output: {output_path}")
+        
+        # Create gTTS object with error handling
+        try:
+            tts = gTTS(text=text, lang=lang, tld=tld, slow=False)
+        except Exception as e:
+            print(f"TTS_ERROR: Failed to create gTTS object - {e}")
+            sys.exit(1)
+        
+        # Try direct save first (simpler and works on most systems)
+        try:
+            print("Generating audio...")
+            tts.save(output_path)
+            
+            # Verify file was created
+            if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+                print("TTS_ERROR: Audio file not created or empty")
+                sys.exit(1)
+            
+            file_size = os.path.getsize(output_path)
+            print(f"TTS_SUCCESS: Generated {file_size} bytes")
+            
+        except Exception as e:
+            print(f"TTS_ERROR: Audio generation failed - {e}")
             sys.exit(1)
             
     except Exception as e:
-        print(f"TTS_ERROR: {e}")
+        print(f"TTS_ERROR: Unexpected error - {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
-main()
-      `
-    ]
+if __name__ == "__main__":
+    main()
+`
 
     let stdout = ''
     let stderr = ''
 
-    const pythonProcess = spawn(pythonCommand, args, {
-      stdio: ['pipe', 'pipe', 'pipe']
+    console.log('Starting Python process for gTTS...')
+    
+    const pythonProcess = spawn(pythonCommand, ['-c', pythonScript], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: process.cwd()
     })
 
     pythonProcess.stdout.on('data', (data: Buffer) => {
-      stdout += data.toString()
+      const output = data.toString()
+      stdout += output
+      console.log('Python stdout:', output.trim())
     })
 
     pythonProcess.stderr.on('data', (data: Buffer) => {
-      stderr += data.toString()
+      const output = data.toString()
+      stderr += output
+      console.log('Python stderr:', output.trim())
     })
 
     pythonProcess.on('close', (code: number | null) => {
+      console.log(`Python process exited with code: ${code}`)
+      console.log('stdout:', stdout.trim())
+      console.log('stderr:', stderr.trim())
+      
       if (code === 0 && stdout.includes('TTS_SUCCESS')) {
         resolve()
       } else {
-        reject(new Error(`gTTS failed: ${stderr || stdout}`))
+        const errorMsg = stderr || stdout || `Process exited with code ${code}`
+        reject(new Error(`gTTS failed: ${errorMsg}`))
       }
     })
 
     pythonProcess.on('error', (error: Error) => {
+      console.error('Python process error:', error)
       reject(new Error(`Failed to start Python process: ${error.message}`))
     })
 
-    // Timeout after 60 seconds (extended for better reliability)
-    setTimeout(() => {
-      pythonProcess.kill()
-      reject(new Error('TTS generation timeout'))
-    }, 60000)
+    // Increased timeout for longer texts and slower connections
+    const timeout = setTimeout(() => {
+      console.log('TTS generation timeout, killing process...')
+      pythonProcess.kill('SIGTERM')
+      reject(new Error('TTS generation timeout (90 seconds)'))
+    }, 90000) // 90 seconds
+
+    // Clear timeout if process completes
+    pythonProcess.on('close', () => {
+      clearTimeout(timeout)
+    })
   })
 }
 
