@@ -9,7 +9,7 @@ import Link from "next/link" // Import Link for client-side navigation
 
 export function Header() {
   const navItems = [
-    { name: "Video Generator", href: "#video-generator" },
+    { name: "Podcast Generator", href: "#podcast-generator" },
     { name: "Quiz Creator", href: "#quiz-creator" },
     { name: "Features", href: "#features" },
     { name: "How it Works", href: "#how-it-works" },
@@ -45,7 +45,7 @@ export function Header() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="#video-generator" className="hidden md:block">
+          <Link href="#podcast-generator" className="hidden md:block">
             <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-6 py-2 rounded-full font-medium shadow-lg transform transition-all hover:scale-105">
               Get Started
             </Button>
@@ -72,7 +72,7 @@ export function Header() {
                     {item.name}
                   </Link>
                 ))}
-                <Link href="#video-generator" className="w-full mt-4">
+                <Link href="#podcast-generator" className="w-full mt-4">
                   <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-6 py-2 rounded-full font-medium shadow-lg w-full">
                     Get Started
                   </Button>

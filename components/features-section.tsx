@@ -75,8 +75,6 @@ export function FeaturesSection() {
   ]
 
   const stats = [
-    { number: "50M+", label: "Podcasts Generated" },
-    { number: "200K+", label: "Active Users" },
     { number: "85%", label: "Learning Improvement" },
     { number: "24/7", label: "AI Availability" }
   ]
@@ -96,7 +94,7 @@ export function FeaturesSection() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
+        <div className="grid grid-cols-2 gap-8 mb-20 max-w-md mx-auto">
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">
