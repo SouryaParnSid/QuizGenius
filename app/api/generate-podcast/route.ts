@@ -75,12 +75,19 @@ PODCAST REQUIREMENTS:
 
 SCRIPT GUIDELINES:
 1. CREATE A FULL-LENGTH EDUCATIONAL PODCAST SCRIPT (minimum 1000-1500 words for proper ${options.duration} duration)
-2. EXPAND on the provided content - don't just summarize it, elaborate with examples, explanations, and detailed discussion
+2. SIGNIFICANTLY EXPAND on the provided content - don't just summarize it, elaborate extensively with:
+   - Multiple detailed examples and real-world applications
+   - Background context and historical perspective
+   - Step-by-step explanations of processes
+   - Comparisons and contrasts with related concepts
+   - Future implications and potential developments
+   - Personal anecdotes and relatable scenarios
 3. Use natural, conversational language that's easy to follow when spoken aloud
 4. Include engaging hooks, smooth transitions, and clear explanations
 5. Break down complex topics into digestible segments with detailed explanations
 6. Add natural pauses, emphasis cues, and speaking directions
 7. Make it sound like a professional educational podcast host who takes time to explain concepts thoroughly
+8. If content is limited, use your knowledge to expand on related topics, provide comprehensive background, and create educational value
 
 DETAILED STRUCTURE REQUIREMENTS FOR ${options.duration} PODCAST:
 ${options.includeIntro ? '- INTRO (2-3 minutes): Engaging hook, topic introduction, what listeners will learn, personal welcome' : ''}
@@ -136,7 +143,17 @@ CRITICAL REQUIREMENTS:
 - Use conversational transitions between ideas
 - Keep sentences at reasonable length for speech
 - Make it educational but engaging and listenable
-- If the source content is brief, elaborate extensively with related concepts and detailed explanations
+
+SPECIAL HANDLING FOR LIMITED CONTENT:
+- If the source content is brief (under 500 words), CREATE A COMPREHENSIVE EDUCATIONAL EPISODE by:
+  * Using the content as a starting point and expanding dramatically with your knowledge
+  * Adding extensive background information, context, and related concepts
+  * Including detailed explanations of how things work, why they matter, and their implications
+  * Providing multiple real-world examples and case studies
+  * Discussing the broader field or industry context
+  * Explaining technical concepts in accessible terms with analogies
+  * Adding historical perspective and future outlook
+- REMEMBER: Even with limited source material, you can create a full-length, valuable educational podcast
 `
 
     const result = await model.generateContent(prompt)

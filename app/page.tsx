@@ -1,6 +1,9 @@
 import { QuizGeniusHero } from "@/components/quizgenius-hero"
+import { RAGIntegrationStatus } from "@/components/rag-integration-status"
 import { PodcastGeneratorSection } from "@/components/podcast-generator-section"
+import { RAGPodcastGenerator } from "@/components/rag-podcast-generator"
 import { QuizGeneratorSection } from "@/components/quiz-generator-section"
+import { RAGQuizGenerator } from "@/components/rag-quiz-generator"
 import { FeaturesSection } from "@/components/features-section"
 import { CTASection } from "@/components/cta-section"
 import { FooterSection } from "@/components/footer-section"
@@ -13,14 +16,29 @@ export default function QuizGeniusPage() {
         {/* Hero Section */}
         <QuizGeniusHero />
         
-        {/* Podcast Generator Section */}
+        {/* RAG Integration Status */}
+        <AnimatedSection delay={0.05}>
+          <RAGIntegrationStatus />
+        </AnimatedSection>
+        
+        {/* Original Podcast Generator Section */}
         <AnimatedSection delay={0.1}>
           <PodcastGeneratorSection />
         </AnimatedSection>
         
-        {/* Quiz Generator Section */}
+        {/* RAG-Powered Podcast Generator Section */}
+        <AnimatedSection delay={0.15}>
+          <RAGPodcastGenerator />
+        </AnimatedSection>
+        
+        {/* Original Quiz Generator Section */}
         <AnimatedSection delay={0.2}>
           <QuizGeneratorSection />
+        </AnimatedSection>
+        
+        {/* RAG-Powered Quiz Generator Section */}
+        <AnimatedSection delay={0.25}>
+          <RAGQuizGenerator />
         </AnimatedSection>
         
         {/* Features Section */}

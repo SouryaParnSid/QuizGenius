@@ -1,0 +1,47 @@
+# RAG System Requirements
+# Retrieval-Augmented Generation with LangChain, ChromaDB, and Sentence Transformers
+
+# Core dependencies with compatible versions
+torch>=2.0.0,<2.2.0
+transformers>=4.35.0,<4.40.0
+sentence-transformers>=2.2.2,<3.0.0
+
+# Core RAG dependencies
+langchain>=0.1.0
+langchain-google-genai>=1.0.0
+chromadb>=0.4.22
+numpy>=1.24.0,<2.0.0
+
+# Vector store alternatives (if ChromaDB fails)
+faiss-cpu>=1.7.4
+
+# Document processing
+pypdf>=3.0.0
+python-docx>=0.8.11
+python-multipart>=0.0.6
+
+# API framework
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+
+# Google AI
+google-generativeai>=0.3.0
+
+# Utilities
+python-dotenv>=1.0.0
+aiofiles>=23.0.0
+requests>=2.31.0
+
+# SQLite compatibility (for Windows)
+pysqlite3-binary>=0.5.0; platform_system == "Windows"
+
+# Text processing
+tiktoken>=0.5.0
+textstat>=0.7.3
+
+# Development and testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0

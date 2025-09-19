@@ -6,18 +6,20 @@ import { Upload, File, X, FileText, Image } from 'lucide-react'
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void
-  acceptedTypes: string[]
+  acceptedTypes?: string[]
   maxSize?: number // in MB
   className?: string
   placeholder?: string
+  accept?: string // Alternative prop for HTML accept attribute
 }
 
 export function FileUpload({ 
   onFileSelect, 
-  acceptedTypes, 
+  acceptedTypes = [], 
   maxSize = 10, 
   className = "",
-  placeholder = "Click to upload or drag and drop"
+  placeholder = "Click to upload or drag and drop",
+  accept
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -29,16 +31,19 @@ export function FileUpload({
       return
     }
     
-    const fileType = file.type
-    const isAccepted = acceptedTypes.some(type => {
-      if (type === 'application/pdf') return fileType === 'application/pdf'
-      if (type.startsWith('image/')) return fileType.startsWith('image/')
-      return fileType === type
-    })
-    
-    if (!isAccepted) {
-      alert(`Please select a valid file type: ${acceptedTypes.join(', ')}`)
-      return
+    // Only validate file types if acceptedTypes is provided and not empty
+    if (acceptedTypes && acceptedTypes.length > 0) {
+      const fileType = file.type
+      const isAccepted = acceptedTypes.some(type => {
+        if (type === 'application/pdf') return fileType === 'application/pdf'
+        if (type.startsWith('image/')) return fileType.startsWith('image/')
+        return fileType === type
+      })
+      
+      if (!isAccepted) {
+        alert(`Please select a valid file type: ${acceptedTypes.join(', ')}`)
+        return
+      }
     }
     
     setSelectedFile(file)
@@ -94,7 +99,7 @@ export function FileUpload({
       <input
         ref={fileInputRef}
         type="file"
-        accept={acceptedTypes.join(',')}
+        accept={accept || (acceptedTypes && acceptedTypes.length > 0 ? acceptedTypes.join(',') : undefined)}
         onChange={handleFileChange}
         className="hidden"
       />
@@ -118,13 +123,15 @@ export function FileUpload({
             <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
               {placeholder}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Supported formats: {acceptedTypes.map(type => {
-                if (type === 'application/pdf') return 'PDF'
-                if (type.startsWith('image/')) return 'Images'
-                return type
-              }).join(', ')}
-            </p>
+            {acceptedTypes && acceptedTypes.length > 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Supported formats: {acceptedTypes.map(type => {
+                  if (type === 'application/pdf') return 'PDF'
+                  if (type.startsWith('image/')) return 'Images'
+                  return type
+                }).join(', ')}
+              </p>
+            )}
             <p className="text-xs text-gray-400">
               Maximum file size: {maxSize}MB
             </p>
