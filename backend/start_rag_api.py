@@ -6,8 +6,12 @@ Startup script for RAG API with embedded API key.
 import os
 import uvicorn
 
-# Set the API key
-os.environ['GEMINI_API_KEY'] = 'AIzaSyD6qe2a7hPLHzXqXsx_i9zEy45hOyTRdog'
+# Load API key from environment - NEVER hardcode API keys!
+# Make sure to set GEMINI_API_KEY in your .env file
+if not os.getenv('GEMINI_API_KEY'):
+    print("⚠️  WARNING: GEMINI_API_KEY not found in environment variables")
+    print("Please set your API key in the .env file before running this script")
+    exit(1)
 
 print("🚀 Starting RAG API Server...")
 print("📡 Server URL: http://localhost:8001")

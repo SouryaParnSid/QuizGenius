@@ -5,8 +5,12 @@ Test RAG system with API key.
 
 import os
 
-# Set the API key
-os.environ['GEMINI_API_KEY'] = 'AIzaSyD6qe2a7hPLHzXqXsx_i9zEy45hOyTRdog'
+# Load API key from environment - NEVER hardcode API keys!
+# Make sure to set GEMINI_API_KEY in your .env file
+if not os.getenv('GEMINI_API_KEY'):
+    print("⚠️  WARNING: GEMINI_API_KEY not found in environment variables")
+    print("Please set your API key in the .env file before running this script")
+    exit(1)
 
 try:
     print("Testing RAG System with API key...")
